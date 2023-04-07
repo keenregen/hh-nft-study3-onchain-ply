@@ -7,6 +7,7 @@ import "@openzeppelin/contracts/utils/Counters.sol";
 import "@openzeppelin/contracts/utils/Strings.sol";
 import "@openzeppelin/contracts/utils/Base64.sol";
 
+// 0xFbeD6fA2c00A680dc535E5D05fA5DF9bD91F81b0
 contract NftThree is ERC721URIStorage {
     using Strings for uint256;
     using Counters for Counters.Counter;
@@ -27,7 +28,7 @@ contract NftThree is ERC721URIStorage {
             "</text>",
             '<text x="50%" y="50%" class="base" dominant-baseline="middle" text-anchor="middle">',
             "Levels: ",
-            tokenIdToLevels[tokenId].toString(),
+            getLevels(tokenId),
             "</text>",
             "</svg>"
         );
@@ -38,6 +39,11 @@ contract NftThree is ERC721URIStorage {
                     Base64.encode(svg)
                 )
             );
+    }
+
+    function getLevels(uint256 tokenId) public view returns (string memory) {
+        uint256 levels = tokenIdToLevels[tokenId];
+        return levels.toString();
     }
 
     function getTokenURI(uint256 tokenId) public returns (string memory) {
@@ -59,5 +65,24 @@ contract NftThree is ERC721URIStorage {
                     Base64.encode(dataURI)
                 )
             );
+    }
+
+    function mint() public {
+        _tokenIds.increment();
+        uint256 newItemId = _tokenIds.current();
+        _safeMint(msg.sender, newItemId);
+        tokenIdToLevels[newItemId] = 0;
+        _setTokenURI(newItemId, getTokenURI(newItemId));
+    }
+
+    function train(uint256 tokenId) public {
+        require(_exists(tokenId), "Please use an existing token");
+        require(
+            ownerOf(tokenId) == msg.sender,
+            "You must own this token to train it"
+        );
+        uint256 currentLevel = tokenIdToLevels[tokenId];
+        tokenIdToLevels[tokenId] = currentLevel + 1;
+        _setTokenURI(tokenId, getTokenURI(tokenId));
     }
 }
